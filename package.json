@@ -1,6 +1,6 @@
 {
+	"version": "0.0.1",
 	"name": "bozoloop-monorepo",
-	"private": true,
 	"homepage": "https://github.com/valgaze/bozoloop#readme",
 	"bugs": {
 		"url": "https://github.com/valgaze/bozoloop/issues"
