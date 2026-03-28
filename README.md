@@ -1,24 +1,26 @@
-# bozoloop
+# 🤡 bozoloop
 
-Self-improving outputs for bozos, without the agent circus
+Iterative code loops for people who ship.
 
-## Installation
+Spec → patch → eval → repeat. Zero dependencies.
+
+## Packages
+
+| Package | Description |
+|---------|-------------|
+| [`bozoloop`](./packages/bozoloop) | Core library + CLI |
+
+## Development
 
 ```bash
-bun add bozoloop
-```
-
-## Usage
-
-```typescript
-import { greet } from "bozoloop";
-
-console.log(greet("World")); // Hello, World!
+bun install
+bun run build
+bun test
 ```
 
 ## Contributing
 
-Please see [CONTRIBUTING.md](./CONTRIBUTING.md) for contribution guidelines.
+See [CONTRIBUTING.md](./CONTRIBUTING.md).
 
 ## License
 

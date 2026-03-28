@@ -1,19 +1,44 @@
 {
 	"name": "bozoloop",
-	"version": "0.1.0",
-	"description": "Self-improving outputs for bozos, without the agent circus",
-	"homepage": "https://github.com/valgaze/bozoloop/tree/main/packages/bozoloop#readme",
+	"version": "0.0.1",
+	"description": "🤡 iterative code loops — spec, patch, eval, repeat. zero dependencies",
+	"homepage": "https://bozoloop.js.org",
+	"bugs": {
+		"url": "https://github.com/valgaze/bozoloop/issues"
+	},
 	"license": "MIT",
+	"author": "valgaze",
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/valgaze/bozoloop.git"
+		"url": "git+https://github.com/valgaze/bozoloop.git",
+		"directory": "packages/bozoloop"
 	},
+	"keywords": [
+		"code-loop",
+		"self-improving",
+		"eval",
+		"patch",
+		"iterative",
+		"devloop",
+		"typescript",
+		"cli",
+		"zero-dependency",
+		"codegen",
+		"testing",
+		"automation"
+	],
 	"files": [
-		"dist"
+		"dist",
+		"LICENSE",
+		"README.md"
 	],
 	"type": "module",
+	"main": "./dist/index.js",
 	"module": "./dist/index.js",
 	"types": "./dist/index.d.ts",
+	"bin": {
+		"bozoloop": "./dist/cli.js"
+	},
 	"exports": {
 		".": {
 			"import": {
@@ -33,5 +58,8 @@
 		"typescript": {
 			"optional": true
 		}
+	},
+	"devDependencies": {
+		"@types/node": "^25.5.0"
 	}
 }

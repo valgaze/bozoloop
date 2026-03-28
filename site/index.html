@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>bozoloop — iterative code loops for people who ship</title>
+  <meta name="description" content="A small TypeScript library for iterative code improvement loops. Spec, patch, eval, repeat. Zero dependencies.">
+  <link rel="canonical" href="https://bozoloop.js.org">
+  <meta property="og:title" content="🤡 bozoloop — iterative code loops for people who ship">
+  <meta property="og:description" content="Spec → patch → eval → repeat. A small TypeScript library for iterative code improvement loops. Zero dependencies.">
+  <meta property="og:url" content="https://bozoloop.js.org">
+  <meta property="og:type" content="website">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #09090b;
+      --surface: #18181b;
+      --surface-2: #27272a;
+      --border: #3f3f46;
+      --text: #fafafa;
+      --text-dim: #a1a1aa;
+      --text-muted: #71717a;
+      --accent: #f97316;
+      --accent-dim: rgba(249, 115, 22, 0.12);
+      --green: #22c55e;
+      --red: #ef4444;
+      --font: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      --mono: 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace;
+      --radius: 12px;
+      --radius-sm: 8px;
+    }
+
+    html {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      scroll-behavior: smooth;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+
+    /* ---- Layout ---- */
+    .container {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    section {
+      padding: 96px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    section:last-of-type { border-bottom: none; }
+
+    /* ---- Nav ---- */
+    nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      background: rgba(9, 9, 11, 0.85);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    nav .container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 56px;
+    }
+
+    .nav-brand {
+      font-weight: 700;
+      font-size: 16px;
+      text-decoration: none;
+      color: var(--text);
+      letter-spacing: -0.01em;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 28px;
+      list-style: none;
+    }
+
+    .nav-links a {
+      font-size: 14px;
+      color: var(--text-dim);
+      text-decoration: none;
+      transition: color 0.15s;
+    }
+
+    .nav-links a:hover { color: var(--text); }
+
+    /* ---- Hero ---- */
+    .hero {
+      padding-top: 160px;
+      padding-bottom: 96px;
+      text-align: center;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 16px;
+      border-radius: 100px;
+      background: var(--accent-dim);
+      color: var(--accent);
+      font-size: 13px;
+      font-weight: 500;
+      margin-bottom: 32px;
+      border: 1px solid rgba(249, 115, 22, 0.2);
+    }
+
+    .hero h1 {
+      font-size: clamp(40px, 6vw, 64px);
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      line-height: 1.1;
+      margin-bottom: 20px;
+    }
+
+    .hero h1 .accent { color: var(--accent); }
+
+    .hero p {
+      font-size: 18px;
+      color: var(--text-dim);
+      max-width: 560px;
+      margin: 0 auto 40px;
+      line-height: 1.7;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 24px;
+      border-radius: var(--radius-sm);
+      font-size: 14px;
+      font-weight: 500;
+      text-decoration: none;
+      transition: all 0.15s;
+      cursor: pointer;
+      border: none;
+    }
+
+    .btn-primary {
+      background: var(--text);
+      color: var(--bg);
+    }
+
+    .btn-primary:hover {
+      background: #e4e4e7;
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+      background: var(--surface);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    .btn-secondary:hover {
+      background: var(--surface-2);
+      border-color: var(--text-muted);
+    }
+
+    /* ---- Pipeline ---- */
+    .pipeline {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin: 48px auto 0;
+      flex-wrap: wrap;
+    }
+
+    .pipeline-step {
+      padding: 8px 18px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-family: var(--mono);
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-dim);
+      transition: all 0.3s;
+    }
+
+    .pipeline-step:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .pipeline-arrow {
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+
+    /* ---- Section headers ---- */
+    .section-label {
+      font-size: 13px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--accent);
+      margin-bottom: 16px;
+    }
+
+    .section-title {
+      font-size: clamp(28px, 4vw, 36px);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 16px;
+    }
+
+    .section-desc {
+      font-size: 16px;
+      color: var(--text-dim);
+      max-width: 600px;
+      line-height: 1.7;
+    }
+
+    /* ---- Code blocks ---- */
+    .code-block {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      margin-top: 32px;
+    }
+
+    .code-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(39, 39, 42, 0.5);
+    }
+
+    .code-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--border);
+    }
+
+    .code-dot:nth-child(1) { background: #ef4444; }
+    .code-dot:nth-child(2) { background: #eab308; }
+    .code-dot:nth-child(3) { background: #22c55e; }
+
+    .code-filename {
+      margin-left: 8px;
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .code-body {
+      padding: 20px 24px;
+      overflow-x: auto;
+    }
+
+    .code-body pre {
+      font-family: var(--mono);
+      font-size: 13px;
+      line-height: 1.75;
+      color: var(--text-dim);
+    }
+
+    .code-body .kw { color: #c084fc; }
+    .code-body .fn { color: #60a5fa; }
+    .code-body .str { color: #34d399; }
+    .code-body .cm { color: var(--text-muted); }
+    .code-body .num { color: var(--accent); }
+    .code-body .op { color: var(--text-muted); }
+    .code-body .type { color: #fbbf24; }
+
+    /* ---- Feature grid ---- */
+    .features {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 24px;
+      margin-top: 48px;
+    }
+
+    .feature-card {
+      padding: 28px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      transition: all 0.2s;
+    }
+
+    .feature-card:hover {
+      border-color: var(--text-muted);
+      transform: translateY(-2px);
+    }
+
+    .feature-icon {
+      font-size: 24px;
+      margin-bottom: 16px;
+    }
+
+    .feature-card h3 {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      letter-spacing: -0.01em;
+    }
+
+    .feature-card p {
+      font-size: 14px;
+      color: var(--text-dim);
+      line-height: 1.6;
+    }
+
+    /* ---- CLI section ---- */
+    .cli-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      margin-top: 32px;
+    }
+
+    .cli-card {
+      padding: 20px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+    }
+
+    .cli-cmd {
+      font-family: var(--mono);
+      font-size: 14px;
+      font-weight: 500;
+      margin-bottom: 6px;
+      color: var(--accent);
+    }
+
+    .cli-desc {
+      font-size: 13px;
+      color: var(--text-dim);
+    }
+
+    /* ---- Compatibility ---- */
+    .compat-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-top: 32px;
+    }
+
+    .compat-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px 20px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-size: 14px;
+      color: var(--text-dim);
+    }
+
+    .compat-item .check {
+      color: var(--green);
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+
+    /* ---- Roadmap ---- */
+    .roadmap-cols {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 32px;
+      margin-top: 32px;
+    }
+
+    @media (max-width: 640px) {
+      .roadmap-cols { grid-template-columns: 1fr; }
+    }
+
+    .roadmap-col h3 {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .roadmap-col ul {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .roadmap-col li {
+      font-size: 14px;
+      color: var(--text-dim);
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      line-height: 1.5;
+    }
+
+    .roadmap-col li .icon {
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .done { color: var(--green); }
+    .planned { color: var(--text-muted); }
+
+    /* ---- Install bar ---- */
+    .install-section {
+      text-align: center;
+    }
+
+    .install-bar {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px 28px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      margin-top: 32px;
+      cursor: pointer;
+      transition: border-color 0.15s;
+    }
+
+    .install-bar:hover {
+      border-color: var(--text-muted);
+    }
+
+    .install-bar code {
+      font-family: var(--mono);
+      font-size: 15px;
+    }
+
+    .install-bar .copy-hint {
+      font-size: 12px;
+      color: var(--text-muted);
+      padding: 3px 8px;
+      background: var(--surface-2);
+      border-radius: 4px;
+    }
+
+    /* ---- Footer ---- */
+    footer {
+      padding: 40px 0;
+      text-align: center;
+      border-top: 1px solid var(--border);
+    }
+
+    footer p {
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+
+    footer a {
+      color: var(--text-dim);
+      text-decoration: none;
+      transition: color 0.15s;
+    }
+
+    footer a:hover { color: var(--text); }
+
+    /* ---- Animations ---- */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .animate {
+      opacity: 0;
+      animation: fadeUp 0.6s ease-out forwards;
+    }
+
+    .animate-d1 { animation-delay: 0.1s; }
+    .animate-d2 { animation-delay: 0.2s; }
+    .animate-d3 { animation-delay: 0.3s; }
+    .animate-d4 { animation-delay: 0.4s; }
+
+    /* ---- Responsive ---- */
+    @media (max-width: 640px) {
+      section { padding: 64px 0; }
+      .hero { padding-top: 120px; padding-bottom: 64px; }
+      .nav-links { gap: 16px; }
+      .pipeline { gap: 6px; }
+      .pipeline-step { padding: 6px 12px; font-size: 12px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Nav -->
+  <nav>
+    <div class="container">
+      <a href="#" class="nav-brand">🤡 bozoloop</a>
+      <ul class="nav-links">
+        <li><a href="#how">How it works</a></li>
+        <li><a href="#features">Features</a></li>
+        <li><a href="#cli">CLI</a></li>
+        <li><a href="https://github.com/valgaze/bozoloop" target="_blank">GitHub</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="container">
+      <div class="hero-badge animate">v0.0.1 · zero dependencies</div>
+      <h1 class="animate animate-d1">
+        Iterative code loops<br>for people who <span class="accent">ship</span>.
+      </h1>
+      <p class="animate animate-d2">
+        You have tools that write code. This is the loop around them.
+        Propose a change, run the evals, record the result, try again.
+      </p>
+      <div class="hero-actions animate animate-d3">
+        <a href="https://www.npmjs.com/package/bozoloop" class="btn btn-primary" target="_blank">npm install bozoloop</a>
+        <a href="https://github.com/valgaze/bozoloop" class="btn btn-secondary" target="_blank">View on GitHub →</a>
+      </div>
+      <div class="pipeline animate animate-d4">
+        <span class="pipeline-step">spec</span>
+        <span class="pipeline-arrow">→</span>
+        <span class="pipeline-step">propose</span>
+        <span class="pipeline-arrow">→</span>
+        <span class="pipeline-step">apply</span>
+        <span class="pipeline-arrow">→</span>
+        <span class="pipeline-step">eval</span>
+        <span class="pipeline-arrow">→</span>
+        <span class="pipeline-step">record</span>
+        <span class="pipeline-arrow">→</span>
+        <span class="pipeline-step">repeat</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- How it works -->
+  <section id="how">
+    <div class="container">
+      <div class="section-label">How it works</div>
+      <h2 class="section-title">A goal, an engine, and evaluators.</h2>
+      <p class="section-desc">
+        You bring something that proposes changes and something that judges them.
+        BozoLoop runs the loop, writes every attempt to a ledger, and stops when
+        things pass or you run out of tries.
+      </p>
+
+      <div class="code-block">
+        <div class="code-header">
+          <span class="code-dot"></span>
+          <span class="code-dot"></span>
+          <span class="code-dot"></span>
+          <span class="code-filename">example.ts</span>
+        </div>
+        <div class="code-body">
+<pre><span class="kw">import</span> { createLoop, commandEvaluator } <span class="kw">from</span> <span class="str">"bozoloop"</span>;
+
+<span class="kw">const</span> loop = <span class="fn">createLoop</span>({
+  goal: <span class="str">"Make all tests pass"</span>,
+  workspace: <span class="str">"."</span>,
+  maxAttempts: <span class="num">5</span>,
+  engine: {
+    <span class="kw">async</span> <span class="fn">suggest</span>(ctx) {
+      <span class="cm">// call your LLM, run a codemod, whatever</span>
+      <span class="kw">return</span> { summary: <span class="str">`fix #${ctx.attempt}`</span>, patch: { <span class="cm">/* ... */</span> } };
+    },
+  },
+  applier: {
+    <span class="kw">async</span> <span class="fn">apply</span>(suggestion) {
+      <span class="cm">// write files, apply diffs, etc.</span>
+      <span class="kw">return</span> { success: <span class="num">true</span> };
+    },
+  },
+  evaluators: [
+    <span class="fn">commandEvaluator</span>(<span class="str">"tests"</span>, <span class="str">"npm test"</span>),
+  ],
+});
+
+<span class="kw">const</span> result = <span class="kw">await</span> loop.<span class="fn">run</span>();
+<span class="cm">// result.status → "completed" | "failed"</span></pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section id="features">
+    <div class="container">
+      <div class="section-label">Features</div>
+      <h2 class="section-title">Small surface. Real capabilities.</h2>
+      <p class="section-desc">
+        Everything you need for iterative code loops. Nothing you don't.
+      </p>
+
+      <div class="features">
+        <div class="feature-card">
+          <div class="feature-icon">📒</div>
+          <h3>Full ledger</h3>
+          <p>Every attempt is recorded — patch summary, eval results, pass/fail, timing. Inspect with <code>bozoloop inspect</code> or read <code>.bozoloop/ledger.json</code> directly.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">⏸️</div>
+          <h3>Pause &amp; resume</h3>
+          <p>Stop mid-run, come back later. State persists to disk. The ledger continues seamlessly across sessions.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">⏪</div>
+          <h3>Checkpoint &amp; rollback</h3>
+          <p>Snapshot your workspace before each attempt. Roll back to the last known good state with one command.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🪝</div>
+          <h3>Lifecycle hooks</h3>
+          <p>Fire callbacks on run start, attempt start/end, suggestion, eval complete, pause, resume, abort, error. Wire up Slack, webhooks, deploy previews.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">📦</div>
+          <h3>Zero dependencies</h3>
+          <p>Pure TypeScript compiled to ESM. No runtime dependencies. The whole package is under 15 kB gzipped.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🔧</div>
+          <h3>Typed config</h3>
+          <p><code>defineConfig()</code> gives you full IntelliSense. <code>bozoloop.config.ts</code> keeps your loop definition clean and version-controlled.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CLI -->
+  <section id="cli">
+    <div class="container">
+      <div class="section-label">CLI</div>
+      <h2 class="section-title">Run. Resume. Inspect. Rollback.</h2>
+      <p class="section-desc">
+        Four commands. No flags you need to memorize.
+      </p>
+
+      <div class="cli-grid">
+        <div class="cli-card">
+          <div class="cli-cmd">$ bozoloop run</div>
+          <div class="cli-desc">Start a new loop from your config file</div>
+        </div>
+        <div class="cli-card">
+          <div class="cli-cmd">$ bozoloop resume</div>
+          <div class="cli-desc">Pick up a paused or interrupted loop</div>
+        </div>
+        <div class="cli-card">
+          <div class="cli-cmd">$ bozoloop inspect</div>
+          <div class="cli-desc">View status, history, and results</div>
+        </div>
+        <div class="cli-card">
+          <div class="cli-cmd">$ bozoloop rollback</div>
+          <div class="cli-desc">Restore the most recent checkpoint</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Works with your tools -->
+  <section id="compat">
+    <div class="container">
+      <div class="section-label">Compatibility</div>
+      <h2 class="section-title">Works with whatever you already use.</h2>
+      <p class="section-desc">
+        BozoLoop doesn't replace your editor, your agent, or your LLM provider.
+        It's the loop you plug around them.
+      </p>
+
+      <div class="compat-grid">
+        <div class="compat-item"><span class="check">✓</span> Any LLM provider</div>
+        <div class="compat-item"><span class="check">✓</span> Any editor / IDE</div>
+        <div class="compat-item"><span class="check">✓</span> Any code agent</div>
+        <div class="compat-item"><span class="check">✓</span> Existing repos</div>
+        <div class="compat-item"><span class="check">✓</span> New projects</div>
+        <div class="compat-item"><span class="check">✓</span> CI / CD pipelines</div>
+        <div class="compat-item"><span class="check">✓</span> Webhooks / Slack</div>
+        <div class="compat-item"><span class="check">✓</span> Plain JSON ledger</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Roadmap -->
+  <section id="roadmap">
+    <div class="container">
+      <div class="section-label">Roadmap</div>
+      <h2 class="section-title">What's here, what's coming.</h2>
+      <p class="section-desc">
+        v0.0.1 ships the core loop. The foundation is deliberately small
+        so it's easy to extend and hard to break.
+      </p>
+
+      <div class="roadmap-cols">
+        <div class="roadmap-col">
+          <h3><span class="done">●</span> v0.0.1 — now</h3>
+          <ul>
+            <li><span class="icon done">✓</span> Core loop engine</li>
+            <li><span class="icon done">✓</span> CLI: run, resume, inspect, rollback</li>
+            <li><span class="icon done">✓</span> Ledger &amp; state persistence</li>
+            <li><span class="icon done">✓</span> Cooperative pause / resume</li>
+            <li><span class="icon done">✓</span> Local filesystem checkpoints</li>
+            <li><span class="icon done">✓</span> Lifecycle hooks</li>
+            <li><span class="icon done">✓</span> Command &amp; predicate evaluators</li>
+            <li><span class="icon done">✓</span> Zero runtime dependencies</li>
+          </ul>
+        </div>
+        <div class="roadmap-col">
+          <h3><span class="planned">○</span> Next</h3>
+          <ul>
+            <li><span class="icon planned">○</span> Git-based checkpoints</li>
+            <li><span class="icon planned">○</span> Signal handling (SIGINT/SIGTERM)</li>
+            <li><span class="icon planned">○</span> Watch mode</li>
+            <li><span class="icon planned">○</span> Parallel evaluators</li>
+            <li><span class="icon planned">○</span> Cloud &amp; worker runtimes</li>
+            <li><span class="icon planned">○</span> Provider adapters (OpenAI, Anthropic)</li>
+            <li><span class="icon planned">○</span> Web dashboard</li>
+            <li><span class="icon planned">○</span> Plugin system</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Install -->
+  <section class="install-section">
+    <div class="container">
+      <h2 class="section-title">Get started.</h2>
+      <p class="section-desc" style="margin: 0 auto;">
+        Install, write a config, run the loop.
+      </p>
+      <div class="install-bar" onclick="copyInstall()" id="install-bar">
+        <code>npm install bozoloop</code>
+        <span class="copy-hint" id="copy-hint">click to copy</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <div class="container">
+      <p>
+        🤡 bozoloop · MIT ·
+        <a href="https://github.com/valgaze/bozoloop">GitHub</a> ·
+        <a href="https://www.npmjs.com/package/bozoloop">npm</a>
+      </p>
+    </div>
+  </footer>
+
+  <script>
+    function copyInstall() {
+      navigator.clipboard.writeText('npm install bozoloop').then(() => {
+        const hint = document.getElementById('copy-hint');
+        hint.textContent = 'copied!';
+        setTimeout(() => { hint.textContent = 'click to copy'; }, 1500);
+      });
+    }
+
+    // Intersection observer for scroll animations
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.style.opacity = '1';
+          entry.target.style.transform = 'translateY(0)';
+        }
+      });
+    }, { threshold: 0.1 });
+
+    document.querySelectorAll('.feature-card, .cli-card, .compat-item').forEach(el => {
+      el.style.opacity = '0';
+      el.style.transform = 'translateY(16px)';
+      el.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
+      observer.observe(el);
+    });
+  </script>
+
+</body>
+</html>
