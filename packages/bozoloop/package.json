@@ -1,6 +1,6 @@
 {
 	"name": "bozoloop",
-	"version": "0.0.1",
+	"version": "0.0.2",
 	"description": "🤡 iterative code loops — spec, patch, eval, repeat. zero dependencies",
 	"homepage": "https://bozoloop.js.org",
 	"bugs": {
