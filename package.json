@@ -1,0 +1,58 @@
+{
+  "name": "bozoloop",
+  "version": "0.0.1",
+  "description": "Zero-dependency TypeScript library for self-improving code loops. Spec. Patch. Eval. Repeat.",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "bin": {
+    "bozoloop": "./dist/cli.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "clean": "rm -rf dist",
+    "prepublishOnly": "npm run clean && npm run build",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "loop",
+    "eval",
+    "self-improving",
+    "code-generation",
+    "patch",
+    "evaluator",
+    "cli",
+    "typescript",
+    "developer-tools",
+    "automation",
+    "zero-dependency"
+  ],
+  "author": "Victor Algaze",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/valgaze/bozoloop.git"
+  },
+  "homepage": "https://bozoloop.js.org",
+  "bugs": {
+    "url": "https://github.com/valgaze/bozoloop/issues"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "devDependencies": {
+    "@types/node": "^25.5.0",
+    "typescript": "^5.7.0"
+  }
+}
